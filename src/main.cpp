@@ -1,5 +1,5 @@
 #include <ESP8266WiFi.h>
-#include <BlynkSimpleEsp8266_SSL.h>
+#include <BlynkSimpleEsp8266.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 #include <OneWire.h>
@@ -12,6 +12,7 @@
 
 //defines
 #define BLYNK_PRINT Serial
+#define BLYNK_DEBUG
 #define ONEWIRE_BUS 12
 #define TEMPERATURE_PRECISION 12 // 12 9 or other ds18b20 resolution
 #define SDA_PIN 4
@@ -20,12 +21,20 @@
 #define LAMP_PIN 13
 #define LAMP_SAVER_TIMER 1000*60*5
 #define HEATER_PIN 14
-#define BOARD_FIRMWARE_VERSION        "1.0.1"
 
 //var
-char auth[] = "YourAuthToken";
-char ssid[] = "YourNetworkName";
-char pass[] = "YourPassword";
+char auth[] = "auth";
+char ssid[] = "ssid";
+char pass[] = "pass";
+IPAddress address = IPAddress(192,168,1,200);
+uint16_t port = 8080; 
+
+//led
+int brightness = 1024;
+int fadeAmount = 5;
+unsigned long previousMillis = 0;
+unsigned long interval = 10;
+
 float temperatures[10];
 String otaURL;
 
@@ -42,7 +51,7 @@ struct{
 //class
 OneWire oneWire(ONEWIRE_BUS);
 DallasTemperature sensors(&oneWire);
-//DeviceAddress tempDeviceAddress;
+DeviceAddress tempDeviceAddress;
 BlynkTimer timer;
 PCF8574 gpio(EXPANDER_ADR);
 WidgetRTC rtc;
@@ -52,15 +61,18 @@ void sensorsInit(void);
 int time_check(long int start, long int stop);
 void worker_run(void);
 void pin_write(int pin, int value);
+void led_run(void);
 
 void setup()
 {
   Serial.begin(115200);
-  Blynk.begin(auth, ssid, pass, IPAddress(192,168,1,200), 8080);
+  Serial.println("start");
+  Blynk.begin(auth, ssid, pass, address, port);
   sensorsInit();
-  Wire.begin(SDA_PIN, SCL_PIN);
+   Wire.begin(SDA_PIN, SCL_PIN);
   setSyncInterval(10 * 60); //10 minute period RTC sync
   timer.setInterval(1000,worker_run);
+  Serial.println("started");
 }
 
 void loop()
@@ -94,6 +106,7 @@ void sensorsInit(void){
   sensorsSetResolution();
   sensors.requestTemperatures();
   timer.setInterval(750 / (1 << (12 - TEMPERATURE_PRECISION)), sensorsRun);
+  timer.setInterval(10,led_run);
 }
 int time_check(long int start, long int stop){
   int nowtime = hour()*60*60 + minute()*60 + second();
@@ -208,6 +221,21 @@ void pin_write(int pin, int value){
     break;
   default:
     break;
+  }
+}
+void led_run(void){
+  if (millis() - previousMillis >= interval){
+    if (brightness <= 0 ){ // reverse the direction of the fading at the ends of the fade:
+      brightness = 0;
+      fadeAmount = -fadeAmount;
+    }
+    if (brightness >=1024 ){ // reverse the direction of the fading at the ends of the fade:
+      brightness = 1024;
+      fadeAmount = -fadeAmount;
+    }
+    brightness = brightness + fadeAmount;
+    analogWrite(2, brightness);
+    previousMillis = millis();
   }
 }
 #include "blynk_pin.h"

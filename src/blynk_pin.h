@@ -5,13 +5,16 @@ BLYNK_CONNECTED() {
   rtc.begin();// Synchronize time on connection
   Blynk.syncAll();
 }
-BLYNK_WRITE(InternalPinOTA) {
-	otaURL = param.asString();
+
+BLYNK_WRITE(V127) {
+  if (param.asInt() == 0) return;
+  Blynk.virtualWrite(V127,0);
+  WiFiClient client;
+  ESPhttpUpdate.setLedPin(2, LOW);
 	Blynk.disconnect();
 	delay(500);
-	ESPhttpUpdate.update(otaURL, BOARD_FIRMWARE_VERSION);
-	delay(10);
-	ESP.reset();
+  Serial.println("Update started");
+	ESPhttpUpdate.update(client,String("http://192.168.1.200:8888/firmware.bin"));
 }
 
 BLYNK_WRITE(V1){
