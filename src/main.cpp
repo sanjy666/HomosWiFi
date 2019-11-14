@@ -5,30 +5,27 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h>
-#include "PCF8574.h"
+#include <PCF8574.h>
 #include <TimeLib.h>
 #include <WidgetRTC.h>
 
 
 //defines
-#define BLYNK_PRINT Serial
-#define BLYNK_DEBUG
+//#define BLYNK_PRINT Serial
+//#define BLYNK_DEBUG
 #define ONEWIRE_BUS 12
-#define TEMPERATURE_PRECISION 12 // 12 9 or other ds18b20 resolution
+#define TEMPERATURE_PRECISION 11 // 12 9 or other ds18b20 resolution
+#define TEMPERATYRE_START_PIN V100
 #define SDA_PIN 4
 #define SCL_PIN 5
 #define EXPANDER_ADR 0x3c
-#define LAMP_PIN 13
+#define LAMP_PIN 16
 #define LAMP_SAVER_TIMER 1000*60*5
-#define HEATER_PIN 14
+#define CASE_FAN_PIN 13
+#define HEATER_FAN_PIN 14
 
 //var
-char auth[] = "auth";
-char ssid[] = "ssid";
-char pass[] = "pass";
-IPAddress address = IPAddress(192,168,1,200);
-uint16_t port = 8080; 
-
+#include "setting.h"
 //led
 int brightness = 1024;
 int fadeAmount = 5;
@@ -69,10 +66,13 @@ void setup()
   Serial.println("start");
   Blynk.begin(auth, ssid, pass, address, port);
   sensorsInit();
-   Wire.begin(SDA_PIN, SCL_PIN);
+  Wire.begin(SDA_PIN, SCL_PIN);
   setSyncInterval(10 * 60); //10 minute period RTC sync
   timer.setInterval(1000,worker_run);
+  timer.setInterval(10,led_run);
   Serial.println("started");
+  pinMode(13,OUTPUT);
+  pinMode(14,OUTPUT);
 }
 
 void loop()
@@ -83,18 +83,20 @@ void loop()
 
 void sensorsRun(void){
   float temperature = 0.0;
-  for (int i = (sensors.getDeviceCount()-1); i >= 0; i--)
-  {
+  int sensorsNum = sensors.getDeviceCount();
+  for (int i = 0; i < sensorsNum; i++){
     temperature = sensors.getTempCByIndex(i);
-    if(temperature != 0.0){
+    if (temperature != 0.0 && temperature != -127){
       temperatures[i] = temperature;
-      Blynk.virtualWrite(V11+i,temperature);
+      Blynk.virtualWrite( (TEMPERATURE_START_PIN + i) ,temperature);
     }
   }
+  sensors.requestTemperatures();
 }
 void sensorsSetResolution(void){
   DeviceAddress tempDeviceAddress;
-  for (int i = (sensors.getDeviceCount()-1); i > -1; i--)
+  int sensorsNum = sensors.getDeviceCount();
+  for (int i = 0; i < sensorsNum; i++)
   {
     sensors.getAddress(tempDeviceAddress, i);
     sensors.setResolution(tempDeviceAddress, TEMPERATURE_PRECISION);
@@ -106,7 +108,6 @@ void sensorsInit(void){
   sensorsSetResolution();
   sensors.requestTemperatures();
   timer.setInterval(750 / (1 << (12 - TEMPERATURE_PRECISION)), sensorsRun);
-  timer.setInterval(10,led_run);
 }
 int time_check(long int start, long int stop){
   int nowtime = hour()*60*60 + minute()*60 + second();
@@ -176,48 +177,52 @@ void worker_run(void){
 }
 void pin_write(int pin, int value){
   switch (pin){
-  case 1:
+  case 9:
     if (millis() < LAMP_SAVER_TIMER){
       break;
     }
     digitalWrite(LAMP_PIN, value);
-    Blynk.virtualWrite(V1,value);
-    break;
-  case 2:
-    digitalWrite(HEATER_PIN, value);
-    Blynk.virtualWrite(V2,value);
-    break;
-  case 3:
-    gpio.write(0, value);
-    Blynk.virtualWrite(V3,value);
-    break;
-  case 4:
-    gpio.write(1, value);
-    Blynk.virtualWrite(V4,value);
-    break;
-  case 5:
-    gpio.write(2, value);
-    Blynk.virtualWrite(V5,value);
-    break;
-  case 6:
-    gpio.write(3, value);
-    Blynk.virtualWrite(V6,value);
-    break;
-  case 7:
-    gpio.write(4, value);
-    Blynk.virtualWrite(V7,value);
-    break;
-  case 8:
-    gpio.write(5, value);
-    Blynk.virtualWrite(V8,value);
-    break;
-  case 9:
-    gpio.write(6, value);
     Blynk.virtualWrite(V9,value);
     break;
   case 10:
-    gpio.write(7, value);
+    digitalWrite(HEATER_FAN_PIN, value);
     Blynk.virtualWrite(V10,value);
+    break;
+  case 11:
+    digitalWrite(CASE_FAN_PIN, value);
+    Blynk.virtualWrite(V11,value);
+    break;
+  case 1:
+    gpio.write(0, value);
+    Blynk.virtualWrite(V1,value);
+    break;
+  case 2:
+    gpio.write(1, value);
+    Blynk.virtualWrite(V2,value);
+    break;
+  case 3:
+    gpio.write(2, value);
+    Blynk.virtualWrite(V3,value);
+    break;
+  case 4:
+    gpio.write(3, value);
+    Blynk.virtualWrite(V4,value);
+    break;
+  case 5:
+    gpio.write(4, value);
+    Blynk.virtualWrite(V5,value);
+    break;
+  case 6:
+    gpio.write(5, value);
+    Blynk.virtualWrite(V6,value);
+    break;
+  case 7:
+    gpio.write(6, value);
+    Blynk.virtualWrite(V7,value);
+    break;
+  case 8:
+    gpio.write(7, value);
+    Blynk.virtualWrite(V8,value);
     break;
   default:
     break;
