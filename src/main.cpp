@@ -71,8 +71,9 @@ void setup()
   timer.setInterval(1000,worker_run);
   timer.setInterval(10,led_run);
   Serial.println("started");
-  pinMode(13,OUTPUT);
-  pinMode(14,OUTPUT);
+  pinMode(LAMP_PIN,OUTPUT);
+  pinMode(CASE_FAN_PIN,OUTPUT);
+  pinMode(HEATER_FAN_PIN,OUTPUT);
 }
 
 void loop()
