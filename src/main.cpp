@@ -37,7 +37,7 @@ float temperatures[11];
 String otaURL;
 
 struct{
-  int pin = 0; // 1 lamp; 2 heat relay; 3-10 gpio expander relay
+  int pin = 0;
   int mode = 0; // 1 time range; 2 heater; 3 cooler; 4 periodic;
   int automatic = 0;
   float low_temp = 0,high_temp = 0;
@@ -191,47 +191,36 @@ void pin_write(int pin, int value){
       break;
     }
     digitalWrite(LAMP_PIN, value);
-    Blynk.virtualWrite(V9,value);
     break;
   case 10:
     digitalWrite(HEATER_FAN_PIN, value);
-    Blynk.virtualWrite(V10,value);
     break;
   case 11:
     digitalWrite(CASE_FAN_PIN, value);
-    Blynk.virtualWrite(V11,value);
     break;
   case 1:
     gpio.write(0, ~value);
-    Blynk.virtualWrite(V1,value);
     break;
   case 2:
     gpio.write(1, ~value);
-    Blynk.virtualWrite(V2,value);
     break;
   case 3:
     gpio.write(2, ~value);
-    Blynk.virtualWrite(V3,value);
     break;
   case 4:
     gpio.write(3, ~value);
-    Blynk.virtualWrite(V4,value);
     break;
   case 5:
     gpio.write(4, ~value);
-    Blynk.virtualWrite(V5,value);
     break;
   case 6:
     gpio.write(5, ~value);
-    Blynk.virtualWrite(V6,value);
     break;
   case 7:
     gpio.write(6, ~value);
-    Blynk.virtualWrite(V7,value);
     break;
   case 8:
     gpio.write(7, ~value);
-    Blynk.virtualWrite(V8,value);
     break;
   default:
     break;
