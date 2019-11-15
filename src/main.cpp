@@ -14,7 +14,7 @@
 #define BLYNK_PRINT terminal
 //#define BLYNK_DEBUG
 #define ONEWIRE_BUS 12
-#define TEMPERATURE_PRECISION 11 // 12 9 or other ds18b20 resolution
+#define TEMPERATURE_PRECISION 9 // 12 9 or other ds18b20 resolution
 #define TEMPERATURE_START_PIN V100
 #define SDA_PIN 4
 #define SCL_PIN 5
@@ -28,7 +28,7 @@
 //var
 #include "setting.h"
 //led
-int brightness = 1024;
+int brightness = 1023;
 int fadeAmount = 5;
 unsigned long previousMillis = 0;
 unsigned long interval = 10;
@@ -70,7 +70,7 @@ void setup()
   sensorsInit();
   Wire.begin(SDA_PIN, SCL_PIN);
   setSyncInterval(10 * 60); //10 minute period RTC sync
-  timer.setInterval(1000,worker_run);
+  timer.setInterval(500,worker_run);
   timer.setInterval(10,led_run);
   Serial.println("started");
   pinMode(LAMP_PIN,OUTPUT);
@@ -79,7 +79,6 @@ void setup()
   digitalWrite(CASE_FAN_PIN,LOW);
   digitalWrite(HEATER_FAN_PIN,LOW);
 }
-
 void loop()
 {
   Blynk.run();
@@ -135,50 +134,37 @@ int time_check(long int start, long int stop){
 void worker_run(void){
   for (int i = 0; i < 10; i++){
     if (worker[i].automatic != 0 && worker[i].pin != 0){
-DEBUG("automatic");DEBUG(worker[i].automatic);
       switch (worker[i].mode) // 1 time range; 2 heater; 3 cooler; 4 periodic;
       {
-DEBUG("mode");DEBUG(worker[i].mode);
         case 1: //time range
           if (worker[i].startTime > 0 && worker[i].stopTime > 0 ){
             pin_write(worker[i].pin, time_check(worker[i].startTime, worker[i].stopTime));
           }
           break;
         case 2: // heater
-DEBUG("heater");
           if (worker[i].temperature_sensor_index < 0) break;
           //if (worker[i].low_temp == 0) break;
           //if (worker[i].high_temp == 0) break;
           //if (temperatures[i] == 0.0) break;
-DEBUG("temperature");DEBUG(temperatures[worker[i].temperature_sensor_index]);
           if (temperatures[worker[i].temperature_sensor_index] < worker[i].low_temp ){
             pin_write(worker[i].pin, 1);
-DEBUG("low t pin_write(pin, 1)");
           }else if (temperatures[worker[i].temperature_sensor_index] > worker[i].high_temp){
-DEBUG("high t pin_write(pin, 0)");
             pin_write(worker[i].pin, 0);
           }else{
             pin_write(worker[i].pin, 0);
-DEBUG("other ??? pin_write(pin, 0)");
           }
-terminal.flush();
           break;
         case 3: //cooler
-DEBUG("temperature");DEBUG(temperatures[worker[i].temperature_sensor_index]);
           if (worker[i].temperature_sensor_index < 0) break;
           //if (worker[i].low_temp != 0) break;
           //if (worker[i].high_temp != 0 ) break;
           if (temperatures[worker[i].temperature_sensor_index] < worker[i].low_temp ){
             pin_write(worker[i].pin, 0);
-DEBUG("low t pin_write(pin, 0)");
           }else if (temperatures[worker[i].temperature_sensor_index] > worker[i].high_temp){
             pin_write(worker[i].pin, 1);
-DEBUG("high t pin_write(pin, 1)");
           }else{
             pin_write(worker[i].pin, 0);
-DEBUG("other ??? pin_write(pin, 0)");
           }
-terminal.flush();
           break;
         case 4:{ //periodic
           if (worker[i].run_time == 0) break;
@@ -216,37 +202,65 @@ void pin_write(int pin, int value){
     Blynk.virtualWrite(V11,value);
     break;
   case 1:
-    gpio.write(0, value);
+    gpio.write(0, ~value);
     Blynk.virtualWrite(V1,value);
     break;
   case 2:
-    gpio.write(1, value);
+    gpio.write(1, ~value);
     Blynk.virtualWrite(V2,value);
     break;
   case 3:
-    gpio.write(2, value);
+    gpio.write(2, ~value);
     Blynk.virtualWrite(V3,value);
     break;
   case 4:
-    gpio.write(3, value);
+    gpio.write(3, ~value);
     Blynk.virtualWrite(V4,value);
     break;
   case 5:
-    gpio.write(4, value);
+    gpio.write(4, ~value);
     Blynk.virtualWrite(V5,value);
     break;
   case 6:
-    gpio.write(5, value);
+    gpio.write(5, ~value);
     Blynk.virtualWrite(V6,value);
     break;
   case 7:
-    gpio.write(6, value);
+    gpio.write(6, ~value);
     Blynk.virtualWrite(V7,value);
     break;
   case 8:
-    gpio.write(7, value);
+    gpio.write(7, ~value);
     Blynk.virtualWrite(V8,value);
     break;
+  default:
+    break;
+  }
+}
+int pin_read(int pin){
+  switch (pin){
+  case 9:
+    return digitalRead(LAMP_PIN);
+  case 10:
+    return digitalRead(HEATER_FAN_PIN);
+  case 11:
+    return digitalRead(CASE_FAN_PIN);
+  case 1:
+    return ~gpio.read(0);
+  case 2:
+    return ~gpio.read(1);
+  case 3:
+    return ~gpio.read(2);
+  case 4:
+    return ~gpio.read(3);
+  case 5:
+    return ~gpio.read(4);
+  case 6:
+    return ~gpio.read(5);
+  case 7:
+    return ~gpio.read(6);
+  case 8:
+    return ~gpio.read(7);
   default:
     break;
   }
