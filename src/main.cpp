@@ -15,7 +15,7 @@
 //#define BLYNK_DEBUG
 #define ONEWIRE_BUS 12
 #define TEMPERATURE_PRECISION 11 // 12 9 or other ds18b20 resolution
-#define TEMPERATYRE_START_PIN V100
+#define TEMPERATURE_START_PIN V100
 #define SDA_PIN 4
 #define SCL_PIN 5
 #define EXPANDER_ADR 0x3c
@@ -32,7 +32,7 @@ int fadeAmount = 5;
 unsigned long previousMillis = 0;
 unsigned long interval = 10;
 
-float temperatures[10];
+float temperatures[11];
 String otaURL;
 
 struct{
@@ -88,7 +88,7 @@ void sensorsRun(void){
   for (int i = 0; i < sensorsNum; i++){
     temperature = sensors.getTempCByIndex(i);
     if (temperature != 0.0 && temperature != -127){
-      temperatures[i] = temperature;
+      temperatures[i+1] = temperature;
       Blynk.virtualWrite( (TEMPERATURE_START_PIN + i) ,temperature);
     }
   }
@@ -140,23 +140,27 @@ void worker_run(void){
           break;
         case 2: // heater
           if (worker[i].temperature_sensor_index < 0) break;
-          if (worker[i].low_temp == 0) break;
-          if (worker[i].high_temp == 0) break;
-          if (temperatures[i] == 0.0) break;
+          //if (worker[i].low_temp == 0) break;
+          //if (worker[i].high_temp == 0) break;
+          //if (temperatures[i] == 0.0) break;
           if (temperatures[worker[i].temperature_sensor_index] < worker[i].low_temp ){
             pin_write(worker[i].pin, 1);
           }else if (temperatures[worker[i].temperature_sensor_index] > worker[i].high_temp){
+            pin_write(worker[i].pin, 0);
+          }else{
             pin_write(worker[i].pin, 0);
           }
           break;
         case 3: //cooler
-          if (worker[i].temperature_sensor_index > -1) break;
-          if (worker[i].low_temp != 0) break;
-          if (worker[i].high_temp != 0 ) break;
+          if (worker[i].temperature_sensor_index < 0) break;
+          //if (worker[i].low_temp != 0) break;
+          //if (worker[i].high_temp != 0 ) break;
           if (temperatures[worker[i].temperature_sensor_index] < worker[i].low_temp ){
             pin_write(worker[i].pin, 0);
           }else if (temperatures[worker[i].temperature_sensor_index] > worker[i].high_temp){
             pin_write(worker[i].pin, 1);
+          }else{
+            pin_write(worker[i].pin, 0);
           }
         case 4:{ //periodic
           if (worker[i].run_time == 0) break;

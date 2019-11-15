@@ -47,7 +47,10 @@ BLYNK_WRITE(V9){
 BLYNK_WRITE(V10){
   pin_write(10,param.asInt());
 }
-// 11-20 termo
+BLYNK_WRITE(V11){
+  pin_write(11,param.asInt());
+}
+// 100+ termo
 //pin set
 BLYNK_WRITE(V21){
   worker[0].pin = param.asInt();
