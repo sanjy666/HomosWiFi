@@ -14,7 +14,7 @@
 #define BLYNK_PRINT terminal
 //#define BLYNK_DEBUG
 #define ONEWIRE_BUS 12
-#define TEMPERATURE_PRECISION 9 // 12 9 or other ds18b20 resolution
+#define TEMPERATURE_PRECISION 10 // 12 9 or other ds18b20 resolution
 #define TEMPERATURE_START_PIN V100
 #define SDA_PIN 4
 #define SCL_PIN 5
@@ -44,7 +44,7 @@ struct{
   int temperature_sensor_index = -1;
   long int startTime = 0,stopTime = 0;
   long int run_time = 0,pause_time = 0;
-}worker[10];
+}worker[11];
 
 //class
 OneWire oneWire(ONEWIRE_BUS);
