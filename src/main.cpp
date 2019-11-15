@@ -11,7 +11,7 @@
 
 
 //defines
-//#define BLYNK_PRINT Serial
+#define BLYNK_PRINT terminal
 //#define BLYNK_DEBUG
 #define ONEWIRE_BUS 12
 #define TEMPERATURE_PRECISION 11 // 12 9 or other ds18b20 resolution
@@ -23,6 +23,7 @@
 #define LAMP_SAVER_TIMER 1000*60*5
 #define CASE_FAN_PIN 13
 #define HEATER_FAN_PIN 14
+#define DEBUG terminal.println
 
 //var
 #include "setting.h"
@@ -52,6 +53,7 @@ DeviceAddress tempDeviceAddress;
 BlynkTimer timer;
 PCF8574 gpio(EXPANDER_ADR);
 WidgetRTC rtc;
+WidgetTerminal terminal(V0);
 
 //func proto
 void sensorsInit(void);
@@ -74,6 +76,8 @@ void setup()
   pinMode(LAMP_PIN,OUTPUT);
   pinMode(CASE_FAN_PIN,OUTPUT);
   pinMode(HEATER_FAN_PIN,OUTPUT);
+  digitalWrite(CASE_FAN_PIN,LOW);
+  digitalWrite(HEATER_FAN_PIN,LOW);
 }
 
 void loop()
@@ -131,37 +135,51 @@ int time_check(long int start, long int stop){
 void worker_run(void){
   for (int i = 0; i < 10; i++){
     if (worker[i].automatic != 0 && worker[i].pin != 0){
+DEBUG("automatic");DEBUG(worker[i].automatic);
       switch (worker[i].mode) // 1 time range; 2 heater; 3 cooler; 4 periodic;
       {
+DEBUG("mode");DEBUG(worker[i].mode);
         case 1: //time range
           if (worker[i].startTime > 0 && worker[i].stopTime > 0 ){
             pin_write(worker[i].pin, time_check(worker[i].startTime, worker[i].stopTime));
           }
           break;
         case 2: // heater
+DEBUG("heater");
           if (worker[i].temperature_sensor_index < 0) break;
           //if (worker[i].low_temp == 0) break;
           //if (worker[i].high_temp == 0) break;
           //if (temperatures[i] == 0.0) break;
+DEBUG("temperature");DEBUG(temperatures[worker[i].temperature_sensor_index]);
           if (temperatures[worker[i].temperature_sensor_index] < worker[i].low_temp ){
             pin_write(worker[i].pin, 1);
+DEBUG("low t pin_write(pin, 1)");
           }else if (temperatures[worker[i].temperature_sensor_index] > worker[i].high_temp){
+DEBUG("high t pin_write(pin, 0)");
             pin_write(worker[i].pin, 0);
           }else{
             pin_write(worker[i].pin, 0);
+DEBUG("other ??? pin_write(pin, 0)");
           }
+terminal.flush();
           break;
         case 3: //cooler
+DEBUG("temperature");DEBUG(temperatures[worker[i].temperature_sensor_index]);
           if (worker[i].temperature_sensor_index < 0) break;
           //if (worker[i].low_temp != 0) break;
           //if (worker[i].high_temp != 0 ) break;
           if (temperatures[worker[i].temperature_sensor_index] < worker[i].low_temp ){
             pin_write(worker[i].pin, 0);
+DEBUG("low t pin_write(pin, 0)");
           }else if (temperatures[worker[i].temperature_sensor_index] > worker[i].high_temp){
             pin_write(worker[i].pin, 1);
+DEBUG("high t pin_write(pin, 1)");
           }else{
             pin_write(worker[i].pin, 0);
+DEBUG("other ??? pin_write(pin, 0)");
           }
+terminal.flush();
+          break;
         case 4:{ //periodic
           if (worker[i].run_time == 0) break;
           if (worker[i].pause_time == 0) break;
