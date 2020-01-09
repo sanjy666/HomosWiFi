@@ -1,0 +1,14 @@
+install python
+install pip
+
+pip install platformio
+
+pio lib install 44
+pio lib install 1358
+pio lib install 54
+pio lib install 1
+pio lib install 415
+
+
+
+

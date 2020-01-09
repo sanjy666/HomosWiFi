@@ -24,7 +24,7 @@
 #define HEATER_FAN_PIN 14
 
 //var
-#include "setting.h"
+#include "simple_setting.h"
 //led
 int brightness = 1023;
 int fadeAmount = 5;
