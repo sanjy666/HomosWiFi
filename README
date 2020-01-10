@@ -9,6 +9,5 @@ pio lib install 54
 pio lib install 1
 pio lib install 415
 
-
-
-
+comment line 50 in ".pio/libdeps/esp07/PCF8574_ID1358/PCF8574.cpp"
+//PCF8574::write8(val);
