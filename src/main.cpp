@@ -34,8 +34,7 @@ unsigned long interval = 10;
 float temperatures[11];
 String otaURL;
 
-struct
-{
+struct{
   int pin = 0;
   int mode = 0; // 1 time range; 2 heater; 3 cooler; 4 periodic;
   int automatic = 0;
@@ -161,8 +160,7 @@ void worker_run(void)
         }
         break;
       case 2: // heater
-        if (worker[i].temperature_sensor_index < 0)
-          break;
+        if (worker[i].temperature_sensor_index < 0)break;
         //if (worker[i].low_temp == 0) break;
         //if (worker[i].high_temp == 0) break;
         //if (temperatures[i] == 0.0) break;

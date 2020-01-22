@@ -148,10 +148,10 @@ BLYNK_WRITE(V90)
   worker[10].pause_time = param[8].asInt();
   worker[10].mode = param[9].asInt();
 }
+//auto update
 BLYNK_WRITE(V127)
 {
-  if (param.asInt() == 0)
-    return;
+  if (param.asInt() == 0) return;
   Blynk.virtualWrite(V127, 0);
   WiFiClient client;
   ESPhttpUpdate.setLedPin(2, LOW);
@@ -160,9 +160,11 @@ BLYNK_WRITE(V127)
   Serial.println("Update started");
   ESPhttpUpdate.update(client, String("http://192.168.1.200:8888/firmware.bin"));
 }
+
+//menu
 int select = 0;
 
-BLYNK_WRITE(V110)
+BLYNK_WRITE(V110)//menu selector
 {
   select = param.asInt();
   Blynk.virtualWrite(V111, worker[select].pin);
@@ -188,6 +190,7 @@ BLYNK_WRITE(V110)
       worker[select].pause_time,
       worker[select].mode);
 }
+//change setting
 BLYNK_WRITE(V111)
 {
   worker[select].pin = param.asInt();
