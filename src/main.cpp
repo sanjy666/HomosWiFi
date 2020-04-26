@@ -10,7 +10,7 @@
 #include <WidgetRTC.h>
 
 //defines
-//#define BLYNK_PRINT terminal
+#define BLYNK_PRINT terminal
 //#define BLYNK_terminal.println
 #define ONEWIRE_BUS 12
 #define TEMPERATURE_PRECISION 10 // 12 9 or other ds18b20 resolution
