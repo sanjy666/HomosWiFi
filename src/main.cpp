@@ -73,7 +73,7 @@ void setup()
   timer.setInterval(20, led_run);
   //  timer.setInterval(5000,i2c_scaner);
   terminal.println("started");
-  pinMode(LAMP_PIN, OUTPUT);
+  pinMode(SRELAY_PIN, OUTPUT);
   pinMode(CASE_FAN_PIN, OUTPUT);
   pinMode(HEATER_FAN_PIN, OUTPUT);
   digitalWrite(CASE_FAN_PIN, LOW);
