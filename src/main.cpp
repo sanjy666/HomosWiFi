@@ -10,7 +10,7 @@
 #include <WidgetRTC.h>
 
 //defines
-#define BLYNK_PRINT terminal
+//#define BLYNK_PRINT terminal
 //#define BLYNK_terminal.println
 #define ONEWIRE_BUS 12
 #define TEMPERATURE_PRECISION 10 // 12 9 or other ds18b20 resolution
@@ -19,12 +19,12 @@
 #define SCL_PIN 5
 #define EXPANDER_ADR 0x3c
 #define LAMP_PIN 16
-#define LAMP_SAVER_TIMER 1000 * 60 * 5
+#define LAMP_SAVER_TIMER 1000
 #define CASE_FAN_PIN 13
 #define HEATER_FAN_PIN 14
 
 //var
-#include "setting.h"
+#include "settings.h"
 //led
 int brightness = 1023;
 int fadeAmount = 5;
@@ -84,7 +84,6 @@ void loop()
   Blynk.run();
   timer.run();
 }
-
 void sensorsRun(void)
 {
   float temperature = 0.0;
@@ -92,14 +91,18 @@ void sensorsRun(void)
   for (int i = 0; i < sensorsNum; i++)
   {
     temperature = sensors.getTempCByIndex(i);
-    if (temperature != 0.0 && temperature != -127)
+    if (temperature != 0.0) // && temperature != -127)
     {
       temperatures[i + 1] = temperature;
-      Blynk.virtualWrite((TEMPERATURE_START_PIN + i), temperature);
+      if (temperature != -127)
+      {
+        Blynk.virtualWrite((TEMPERATURE_START_PIN + i), temperature);
+      }
     }
   }
   sensors.requestTemperatures();
 }
+
 void sensorsSetResolution(void)
 {
   DeviceAddress tempDeviceAddress;
@@ -110,6 +113,7 @@ void sensorsSetResolution(void)
     sensors.setResolution(tempDeviceAddress, TEMPERATURE_PRECISION);
   }
 }
+
 void sensorsInit(void)
 {
   sensors.begin();
@@ -118,6 +122,7 @@ void sensorsInit(void)
   sensors.requestTemperatures();
   timer.setInterval(750 / (1 << (12 - TEMPERATURE_PRECISION)), sensorsRun);
 }
+
 int time_check(long int start, long int stop)
 {
   int nowtime = hour() * 60 * 60 + minute() * 60 + second();
@@ -145,6 +150,7 @@ int time_check(long int start, long int stop)
   }
   return 0;
 }
+
 void worker_run(void)
 {
   for (int i = 0; i < 10; i++)
@@ -160,19 +166,26 @@ void worker_run(void)
         }
         break;
       case 2: // heater
-        if (worker[i].temperature_sensor_index < 0)break;
+        if (worker[i].temperature_sensor_index < 0)
+          break;
         //if (worker[i].low_temp == 0) break;
         //if (worker[i].high_temp == 0) break;
-        //if (temperatures[i] == 0.0) break;
+
+        if (temperatures[i] == -127)
+        {
+          pin_write(worker[i].pin, 0);
+          break;
+        }
+
         if (temperatures[worker[i].temperature_sensor_index] < worker[i].low_temp)
         {
           pin_write(worker[i].pin, 1);
+          break;
         }
         else if (temperatures[worker[i].temperature_sensor_index] > worker[i].high_temp)
         {
           pin_write(worker[i].pin, 0);
-          //          }else{
-          //            pin_write(worker[i].pin, 0);
+          break;
         }
         break;
       case 3: //cooler
@@ -180,19 +193,23 @@ void worker_run(void)
           break;
         //if (worker[i].low_temp != 0) break;
         //if (worker[i].high_temp != 0 ) break;
+        if (temperatures[i] == -127)
+        {
+          pin_write(worker[i].pin, 0);
+          break;
+        }
         if (temperatures[worker[i].temperature_sensor_index] < worker[i].low_temp)
         {
           pin_write(worker[i].pin, 0);
+          break;
         }
         else if (temperatures[worker[i].temperature_sensor_index] > worker[i].high_temp)
         {
           pin_write(worker[i].pin, 1);
-          //          }else{
-          //            pin_write(worker[i].pin, 0);
         }
         break;
-      case 4:
-      { //periodic
+      case 4: //period time
+      {
         if (worker[i].run_time == 0)
           break;
         if (worker[i].pause_time == 0)
@@ -220,11 +237,11 @@ void pin_write(int pin, int value)
   switch (pin)
   {
   case 9:
-    if (millis() < LAMP_SAVER_TIMER)
+    if (millis() < SRELAY_SAVER_TIMER)
     {
       break;
     }
-    digitalWrite(LAMP_PIN, value);
+    digitalWrite(SRELAY_PIN, value);
     break;
   case 10:
     digitalWrite(HEATER_FAN_PIN, value);
@@ -313,7 +330,7 @@ int pin_read(int pin)
   switch (pin)
   {
   case 9:
-    return digitalRead(LAMP_PIN);
+    return digitalRead(SRELAY_PIN);
   case 10:
     return digitalRead(HEATER_FAN_PIN);
   case 11:
