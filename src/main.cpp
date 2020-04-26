@@ -18,8 +18,8 @@
 #define SDA_PIN 4
 #define SCL_PIN 5
 #define EXPANDER_ADR 0x3c
-#define LAMP_PIN 16
-#define LAMP_SAVER_TIMER 1000
+#define SRELAY_PIN 16
+#define SRELAY_SAVER_TIMER 1000
 #define CASE_FAN_PIN 13
 #define HEATER_FAN_PIN 14
 
