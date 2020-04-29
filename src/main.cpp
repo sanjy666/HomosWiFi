@@ -98,25 +98,26 @@ void loop()
   }
   else
   {
-    Blynk.connectWifi(ssid, pass);
+    WiFi.begin(ssid, pass);
+    WiFi.setAutoReconnect(true);
+    WiFi.waitForConnectResult(10000UL);
     if (WiFi.status() == WL_CONNECTED)
     {
-      Blynk.config(auth);
+      Blynk.config(auth, address, port);
       Blynk.connect();
     }
   }
   timer.run();
-}
-if (Serial.available())
-{
-  cmd = Serial.readStringUntil('\n');
-  if (cmd == "reboot")
+  if (Serial.available())
   {
-    Serial.println("Nice rebooted");
-    ESP.restart();
+    cmd = Serial.readStringUntil('\n');
+    if (cmd == "reboot")
+    {
+      Serial.println("Nice rebooted");
+      ESP.restart();
+    }
+    Serial.println("Nice cmd is " + cmd);
   }
-  Serial.println("Nice cmd is " + cmd);
-}
 }
 
 void sensorsRun(void)
