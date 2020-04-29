@@ -1,4 +1,6 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
+
 #include <BlynkSimpleEsp8266.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
@@ -9,11 +11,16 @@
 #include <TimeLib.h>
 #include <WidgetRTC.h>
 
-//defines
-#define BLYNK_PRINT terminal
-//#define BLYNK_terminal.println
+//#include <ArduinoJson.h>
+
+// Blynk
+#define BLYNK_DEBUG
+#define BLYNK_PRINT Serial
+//#define BLYNK_PRINT terminal
+//IPAddress mqtt_server(192,168,1,200)
+
 #define ONEWIRE_BUS 12
-#define TEMPERATURE_PRECISION 10 // 12 9 or other ds18b20 resolution
+#define TEMPERATURE_PRECISION 12 // 12 9 or other ds18b20 resolution
 #define TEMPERATURE_START_PIN V100
 #define SDA_PIN 4
 #define SCL_PIN 5
@@ -24,7 +31,7 @@
 #define HEATER_FAN_PIN 14
 
 //var
-#include "settings.h"
+#include "setting.h"
 //led
 int brightness = 1023;
 int fadeAmount = 5;
@@ -34,7 +41,8 @@ unsigned long interval = 10;
 float temperatures[11];
 String otaURL;
 
-struct{
+struct
+{
   int pin = 0;
   int mode = 0; // 1 time range; 2 heater; 3 cooler; 4 periodic;
   int automatic = 0;
@@ -51,7 +59,7 @@ DeviceAddress tempDeviceAddress;
 BlynkTimer timer;
 PCF8574 gpio(EXPANDER_ADR);
 WidgetRTC rtc;
-WidgetTerminal terminal(V0);
+//WidgetTerminal terminal(V0);
 
 //func proto
 void sensorsInit(void);
@@ -59,31 +67,45 @@ int time_check(long int start, long int stop);
 void worker_run(void);
 void pin_write(int pin, int value);
 void led_run(void);
-void i2c_scaner(void);
+//void i2c_scaner(void);
 
 void setup()
 {
   Serial.begin(115200);
-  terminal.println("start");
-  Blynk.begin(auth, ssid, pass, address, port);
+  Serial.println("start");
+  WiFi.begin(ssid, pass);
+  Blynk.config(auth, address, port);
   sensorsInit();
   Wire.begin(SDA_PIN, SCL_PIN);
   setSyncInterval(10 * 60); //10 minute period RTC sync
-  timer.setInterval(1000, worker_run);
-  timer.setInterval(20, led_run);
+  timer.setInterval(500L, worker_run);
+  timer.setInterval(10L, led_run);
   //  timer.setInterval(5000,i2c_scaner);
-  terminal.println("started");
+  Serial.println("started");
   pinMode(SRELAY_PIN, OUTPUT);
   pinMode(CASE_FAN_PIN, OUTPUT);
   pinMode(HEATER_FAN_PIN, OUTPUT);
   digitalWrite(CASE_FAN_PIN, LOW);
   digitalWrite(HEATER_FAN_PIN, LOW);
+  Blynk.connect();
 }
+String cmd;
 void loop()
 {
   Blynk.run();
   timer.run();
+  if (Serial.available())
+  {
+    cmd = Serial.readStringUntil('\n');
+    if (cmd == "reboot")
+    {
+      Serial.println("Nice rebooted");
+      ESP.restart();
+    }
+    Serial.println("Nice cmd is " + cmd);
+  }
 }
+
 void sensorsRun(void)
 {
   float temperature = 0.0;
@@ -100,6 +122,7 @@ void sensorsRun(void)
       }
     }
   }
+  Serial.println("saved temp value");
   sensors.requestTemperatures();
 }
 
@@ -120,7 +143,7 @@ void sensorsInit(void)
   sensors.setWaitForConversion(false);
   sensorsSetResolution();
   sensors.requestTemperatures();
-  timer.setInterval(750 / (1 << (12 - TEMPERATURE_PRECISION)), sensorsRun);
+  timer.setInterval(1000 / (1 << (12 - TEMPERATURE_PRECISION)), sensorsRun);
 }
 
 int time_check(long int start, long int stop)
@@ -432,6 +455,7 @@ void led_run(void)
 }
 #include "blynk_pin.h"
 
+/*
 void i2c_scaner(void)
 {
   byte error, address;
@@ -469,5 +493,6 @@ void i2c_scaner(void)
   if (nDevices == 0)
     terminal.println("No I2C devices found\n");
   else
-    terminal.println("done\n");
-}
+    terminal.println
+
+    */

@@ -2,12 +2,7 @@ apt install python
 apt install python-pip
 
 pip install platformio
-
-pio lib install 44
-pio lib install 1358
-pio lib install 54
-pio lib install 1
-pio lib install 415
+pio lib install 1 44 54 415 1358
 
 #comment line 50 in ".pio/libdeps/esp07/PCF8574_ID1358/PCF8574.cpp"
 #PCF8574::write8(val);
