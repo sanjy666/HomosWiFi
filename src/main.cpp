@@ -92,18 +92,31 @@ void setup()
 String cmd;
 void loop()
 {
-  Blynk.run();
-  timer.run();
-  if (Serial.available())
+  if (Blynk.connected())
   {
-    cmd = Serial.readStringUntil('\n');
-    if (cmd == "reboot")
-    {
-      Serial.println("Nice rebooted");
-      ESP.restart();
-    }
-    Serial.println("Nice cmd is " + cmd);
+    Blynk.run();
   }
+  else
+  {
+    Blynk.connectWifi(ssid, pass);
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      Blynk.config(auth);
+      Blynk.connect();
+    }
+  }
+  timer.run();
+}
+if (Serial.available())
+{
+  cmd = Serial.readStringUntil('\n');
+  if (cmd == "reboot")
+  {
+    Serial.println("Nice rebooted");
+    ESP.restart();
+  }
+  Serial.println("Nice cmd is " + cmd);
+}
 }
 
 void sensorsRun(void)
