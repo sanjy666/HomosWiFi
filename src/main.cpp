@@ -10,15 +10,17 @@
 #include <PCF8574.h>
 #include <TimeLib.h>
 #include <WidgetRTC.h>
+#include <ArduinoOTA.h>
 
 //#include <ArduinoJson.h>
 
 // Blynk
-#define BLYNK_DEBUG
-#define BLYNK_PRINT Serial
+//#define BLYNK_DEBUG
+//#define BLYNK_PRINT Serial
 //#define BLYNK_PRINT terminal
 //IPAddress mqtt_server(192,168,1,200)
 
+//pin defines
 #define ONEWIRE_BUS 12
 #define TEMPERATURE_PRECISION 12 // 12 9 or other ds18b20 resolution
 #define TEMPERATURE_START_PIN V100
@@ -33,6 +35,7 @@
 //var
 #include "setting.h"
 //led
+const int ESP_BUILTIN_LED = 2;
 int brightness = 1023;
 int fadeAmount = 5;
 unsigned long previousMillis = 0;
@@ -73,11 +76,44 @@ void setup()
 {
   Serial.begin(115200);
   Serial.println("start");
+
   WiFi.begin(ssid, pass);
+  // OTA
+  ArduinoOTA.setPort(8266);
+  ArduinoOTA.setHostname("esp1");
+  ArduinoOTA.setPassword((const char *)"1rklp0ts");
+  ArduinoOTA.onStart([]() {
+    //Serial.println("Start"); //  "Начало OTA-апдейта"
+  });
+  ArduinoOTA.onEnd([]() {
+    //Serial.println("\nEnd"); //  "Завершение OTA-апдейта"
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    //Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    //Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR)
+      Serial.println("Auth Failed");
+    //  "Ошибка при аутентификации"
+    else if (error == OTA_BEGIN_ERROR)
+      Serial.println("Begin Failed");
+    //  "Ошибка при начале OTA-апдейта"
+    else if (error == OTA_CONNECT_ERROR)
+      Serial.println("Connect Failed");
+    //  "Ошибка при подключении"
+    else if (error == OTA_RECEIVE_ERROR)
+      Serial.println("Receive Failed");
+    //  "Ошибка при получении данных"
+    else if (error == OTA_END_ERROR)
+      Serial.println("End Failed");
+    //  "Ошибка при завершении OTA-апдейта"
+  });
+  ArduinoOTA.begin();
   Blynk.config(auth, address, port);
   sensorsInit();
-  Wire.begin(SDA_PIN, SCL_PIN);
-  setSyncInterval(10 * 60); //10 minute period RTC sync
+  Wire.begin(SDA_PIN, SCL_PIN); //i2c begin
+  setSyncInterval(10 * 60);     //10 minute period RTC sync
   timer.setInterval(500L, worker_run);
   timer.setInterval(10L, led_run);
   //  timer.setInterval(5000,i2c_scaner);
@@ -90,19 +126,25 @@ void setup()
   Blynk.connect();
 }
 String cmd;
+
 void loop()
 {
+  ArduinoOTA.handle();
   if (Blynk.connected())
   {
     Blynk.run();
   }
   else
   {
-    WiFi.begin(ssid, pass);
-    WiFi.setAutoReconnect(true);
-    WiFi.waitForConnectResult(10000UL);
+    if (!WiFi.isConnected())
+    {
+      WiFi.begin(ssid, pass);
+      WiFi.setAutoReconnect(true);
+      //    WiFi.waitForConnectResult(1000UL);
+    }
     if (WiFi.status() == WL_CONNECTED)
     {
+      Serial.println(WiFi.localIP());
       Blynk.config(auth, address, port);
       Blynk.connect();
     }
@@ -136,7 +178,7 @@ void sensorsRun(void)
       }
     }
   }
-  Serial.println("saved temp value");
+  //Serial.println("saved temp value");
   sensors.requestTemperatures();
 }
 
@@ -207,13 +249,11 @@ void worker_run(void)
           break;
         //if (worker[i].low_temp == 0) break;
         //if (worker[i].high_temp == 0) break;
-
         if (temperatures[i] == -127)
         {
           pin_write(worker[i].pin, 0);
           break;
         }
-
         if (temperatures[worker[i].temperature_sensor_index] < worker[i].low_temp)
         {
           pin_write(worker[i].pin, 1);
@@ -450,7 +490,8 @@ int pin_read(int pin)
 }
 void led_run(void)
 {
-  if (millis() - previousMillis >= interval)
+  int millisNow = millis();
+  if (millisNow - previousMillis >= interval)
   {
     if (brightness <= 0)
     { // reverse the direction of the fading at the ends of the fade:
@@ -463,8 +504,8 @@ void led_run(void)
       fadeAmount = -fadeAmount;
     }
     brightness = brightness + fadeAmount;
-    analogWrite(2, brightness);
-    previousMillis = millis();
+    analogWrite(ESP_BUILTIN_LED, brightness);
+    previousMillis = millisNow;
   }
 }
 #include "blynk_pin.h"
@@ -504,9 +545,9 @@ void i2c_scaner(void)
       terminal.println(address, HEX);
     }
   }
+  
   if (nDevices == 0)
     terminal.println("No I2C devices found\n");
   else
-    terminal.println
-
-    */
+    terminal.println()
+}  */
