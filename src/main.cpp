@@ -81,18 +81,48 @@ const int echoPin = 5; //D3
 // defines variables
 long duration;
 int distance;
-
+bool Connected2Blynk = false;
+void CheckConnection()
+{
+    Connected2Blynk = Blynk.connected();
+    if (!Connected2Blynk)
+    {
+        Serial.println("Not connected to Blynk server");
+        Blynk.connect(3333); // timeout set to 10 seconds and then continue without Blynk
+    }
+    else
+    {
+        Serial.println("Connected to Blynk server");
+    }
+}
 void setup()
 {
     Serial.begin(115200);
     Serial.println("start");
     WiFi.begin(ssid, pass);
-    Blynk.config(auth,address,port);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+    Blynk.config(auth, address, port);
+    Blynk.connect(3333);
+    while (Blynk.connect() == false)
+    {
+        // Wait until connected
+        delay(500);
+        Serial.print(".");
+    }
     sensorsInit();
     Wire.begin(SDA_PIN, SCL_PIN);
     setSyncInterval(10 * 60); //10 minute period RTC sync
     timer.setInterval(500, worker_run);
     timer.setInterval(10, led_run);
+    timer.setInterval(11000L, CheckConnection);
     //  timer.setInterval(5000,i2c_scaner);
     Serial.println("started");
     pinMode(SRELAY_PIN, OUTPUT);
@@ -100,7 +130,7 @@ void setup()
     pinMode(HEATER_FAN_PIN, OUTPUT);
     digitalWrite(CASE_FAN_PIN, LOW);
     digitalWrite(HEATER_FAN_PIN, LOW);
-    //Blynk.connect();
+
     // Port defaults to 8266
     ArduinoOTA.setPort(8266);
 
@@ -158,37 +188,18 @@ void setup()
         }
     });
     ArduinoOTA.begin();
-    Serial.println("Ready");
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
     pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
     pinMode(echoPin, INPUT);  // Sets the echoPin as an Input
-    Blynk.connect();
 }
 String cmd;
 
 void loop()
 {
-    if (Blynk.connected())
-  {
-    //Serial.println("loop");
-    Blynk.run();
-      }
-  else
-  {
-    if (!WiFi.isConnected())
+    ArduinoOTA.handle();
+    if (Connected2Blynk)
     {
-      WiFi.begin(ssid, pass);
-      WiFi.setAutoReconnect(true);
-      //    WiFi.waitForConnectResult(1000UL);
+        Blynk.run();
     }
-    if (WiFi.status() == WL_CONNECTED)
-    {
-      Serial.println(WiFi.localIP());
-      Blynk.config(auth, address, port);
-      Blynk.connect();
-    }
-  }
     timer.run();
     /*   if (Serial.available())
   {
@@ -200,7 +211,8 @@ void loop()
     }
     Serial.println("Nice cmd is " + cmd);
   } */
-   /*  ArduinoOTA.handle();
+      
+      /*
     // Clears the trigPin
     digitalWrite(trigPin, LOW);
     delayMicroseconds(2);
