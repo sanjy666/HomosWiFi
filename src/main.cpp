@@ -11,6 +11,7 @@
 #include <Wire.h>
 #include <PCF8574.h>
 #include <TimeLib.h>
+#include <WidgetRTC.h>
 #include <ArduinoOTA.h>
 
 //#include <ArduinoJson.h>
