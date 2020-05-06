@@ -11,16 +11,17 @@
 #include <Wire.h>
 #include <PCF8574.h>
 #include <TimeLib.h>
-#include <WidgetRTC.h>
+#include <ArduinoOTA.h>
 
 //#include <ArduinoJson.h>
 
 // Blynk
-#define BLYNK_DEBUG
-#define BLYNK_PRINT Serial
+//#define BLYNK_DEBUG
+//#define BLYNK_PRINT Serial
 //#define BLYNK_PRINT terminal
 //IPAddress mqtt_server(192,168,1,200)
 
+//pin defines
 #define ONEWIRE_BUS 12
 #define TEMPERATURE_PRECISION 10 // 12 9 or other ds18b20 resolution
 #define TEMPERATURE_START_PIN V100
@@ -35,6 +36,7 @@
 //var
 #include "settings.h"
 //led
+const int ESP_BUILTIN_LED = 2;
 int brightness = 1023;
 int fadeAmount = 5;
 unsigned long previousMillis = 0;
@@ -172,11 +174,15 @@ void loop()
     /*   }
   else
   {
-    WiFi.begin(ssid, pass);
-    WiFi.setAutoReconnect(true);
-    WiFi.waitForConnectResult(10000UL);
+    if (!WiFi.isConnected())
+    {
+      WiFi.begin(ssid, pass);
+      WiFi.setAutoReconnect(true);
+      //    WiFi.waitForConnectResult(1000UL);
+    }
     if (WiFi.status() == WL_CONNECTED)
     {
+      Serial.println(WiFi.localIP());
       Blynk.config(auth, address, port);
       Blynk.connect();
     }
