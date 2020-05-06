@@ -76,8 +76,8 @@ void led_run(void);
 
 // defines pins numbers
 
-const int trigPin = 2; //D4
-const int echoPin = 0; //D3
+const int trigPin = 4; //D4
+const int echoPin = 5; //D3
 // defines variables
 long duration;
 int distance;
@@ -86,8 +86,8 @@ void setup()
 {
     Serial.begin(115200);
     Serial.println("start");
-    //WiFi.begin();
-    Blynk.begin(auth, ssid, pass, address, port);
+    WiFi.begin(ssid, pass);
+    Blynk.config(auth,address,port);
     sensorsInit();
     Wire.begin(SDA_PIN, SCL_PIN);
     setSyncInterval(10 * 60); //10 minute period RTC sync
@@ -163,16 +163,17 @@ void setup()
     Serial.println(WiFi.localIP());
     pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
     pinMode(echoPin, INPUT);  // Sets the echoPin as an Input
+    Blynk.connect();
 }
 String cmd;
 
 void loop()
 {
-    /* if (Blynk.connected())
-  { */
+    if (Blynk.connected())
+  {
     //Serial.println("loop");
     Blynk.run();
-    /*   }
+      }
   else
   {
     if (!WiFi.isConnected())
@@ -187,7 +188,7 @@ void loop()
       Blynk.config(auth, address, port);
       Blynk.connect();
     }
-  } */
+  }
     timer.run();
     /*   if (Serial.available())
   {
@@ -199,7 +200,7 @@ void loop()
     }
     Serial.println("Nice cmd is " + cmd);
   } */
-    ArduinoOTA.handle();
+   /*  ArduinoOTA.handle();
     // Clears the trigPin
     digitalWrite(trigPin, LOW);
     delayMicroseconds(2);
@@ -216,7 +217,7 @@ void loop()
     distance = duration * 0.034 / 2;
     // Prints the distance on the Serial Monitor
     //Serial.print("Distance: ");
-    //Serial.println(distance);
+    //Serial.println(distance); */
 }
 
 void sensorsRun(void)
