@@ -6,3 +6,6 @@ pio lib install 1 44 54 415 1358
 
 #comment line 50 in ".pio/libdeps/esp07/PCF8574_ID1358/PCF8574.cpp"
 #PCF8574::write8(val);
+
+pio run -t upload
+see flash.bat or rename to flash.sh and comment win cmd
