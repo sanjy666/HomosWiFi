@@ -1,1 +1,1 @@
-scp -i .ssh/id_rsa .pio/build/esp07/firmware.bin sanjy@rpi:~/www/firmware.bin 
+scp -i ~/.ssh/id_rsa .pio/build/esp07/firmware.bin sanjy@rpi:~/www/firmware.bin 

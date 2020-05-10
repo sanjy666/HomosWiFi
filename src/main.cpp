@@ -11,6 +11,7 @@
 #include <WidgetRTC.h>
 #include <WidgetTerminal.h>
 #include <ArduinoOTA.h>
+#include <MQTTClient.h>
 
 //#include <ArduinoJson.h>
 
@@ -41,6 +42,7 @@ unsigned long interval = 10;
 float temperatures[11];
 String otaURL;
 
+u_long mqttlastMillis = 0;
 struct
 {
   int pin = 0;
@@ -53,6 +55,8 @@ struct
 } worker[11];
 
 //class
+MQTTClient mqttClient;
+WiFiClient WiFiclient;
 OneWire oneWire(ONEWIRE_BUS);
 DallasTemperature sensors(&oneWire);
 DeviceAddress tempDeviceAddress;
@@ -67,6 +71,10 @@ int time_check(long int start, long int stop);
 void worker_run(void);
 void pin_write(int pin, int value);
 void led_run(void);
+void mqttSend();
+void mqttConnect(void);
+
+
 //void i2c_scaner(void);
 
 void setup()
@@ -79,14 +87,17 @@ void setup()
   setSyncInterval(10 * 60); //10 minute period RTC sync
   timer.setInterval(200, worker_run);
   timer.setInterval(10, led_run);
-  //  timer.setInterval(5000,i2c_scaner);
+  timer.setInterval(5000, mqttConnect);
+  // timer.setInterval(5000,i2c_scaner);
   Serial.println("started");
   pinMode(SRELAY_PIN, OUTPUT);
   pinMode(CASE_FAN_PIN, OUTPUT);
   pinMode(HEATER_FAN_PIN, OUTPUT);
   digitalWrite(CASE_FAN_PIN, LOW);
   digitalWrite(HEATER_FAN_PIN, LOW);
+#include "ota.h"
   ArduinoOTA.begin();
+  mqttClient.begin("192.168.1.200", WiFiclient);
 }
 void loop()
 {
@@ -440,6 +451,29 @@ void led_run(void)
     brightness = brightness + fadeAmount;
     analogWrite(2, brightness);
     previousMillis = millis();
+  }
+}
+void mqttConnect(void)
+{
+  if (!mqttClient.connect("nodemcu", "try", "try"))
+  {
+    Serial.println("\nmqtt connected!");
+    mqttClient.subscribe("nodemcu");
+  }
+}
+void mqttSend()
+{
+  int val = analogRead(A0);
+  mqttClient.loop();
+  if (!mqttClient.connected())
+  {
+    mqttConnect();
+  }
+
+  if (millis() - mqttlastMillis > 1000)
+  {
+    mqttlastMillis = millis();
+    mqttClient.publish("nodemcu/photocell", (String)val);
   }
 }
 #include "blynk_pin.h"
