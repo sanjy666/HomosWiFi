@@ -74,7 +74,6 @@ void led_run(void);
 void mqttSend();
 void mqttConnect(void);
 
-
 //void i2c_scaner(void);
 
 void setup()
@@ -87,7 +86,7 @@ void setup()
   setSyncInterval(10 * 60); //10 minute period RTC sync
   timer.setInterval(200, worker_run);
   timer.setInterval(10, led_run);
-  timer.setInterval(5000, mqttConnect);
+  timer.setInterval(1000, mqttSend);
   // timer.setInterval(5000,i2c_scaner);
   Serial.println("started");
   pinMode(SRELAY_PIN, OUTPUT);
@@ -97,7 +96,7 @@ void setup()
   digitalWrite(HEATER_FAN_PIN, LOW);
 #include "ota.h"
   ArduinoOTA.begin();
-  mqttClient.begin("192.168.1.200", WiFiclient);
+  mqttClient.begin("192.168.1.210", 8883, WiFiclient);
 }
 void loop()
 {
@@ -119,10 +118,12 @@ void sensorsRun(void)
       if (temperature != -127)
       {
         Blynk.virtualWrite((TEMPERATURE_START_PIN + i), temperature);
+        mqttClient.publish("nodemcu/temp", (String)temperature);
+        //terminal.print(temperature);
       }
     }
   }
-  terminal.println("saved temp value");
+  terminal.println();
   sensors.requestTemperatures();
 }
 
@@ -455,8 +456,9 @@ void led_run(void)
 }
 void mqttConnect(void)
 {
-  if (!mqttClient.connect("nodemcu", "try", "try"))
+  if (!mqttClient.connected())
   {
+    mqttClient.connect("nodemcu");
     Serial.println("\nmqtt connected!");
     mqttClient.subscribe("nodemcu");
   }
@@ -469,11 +471,6 @@ void mqttSend()
   {
     mqttConnect();
   }
-
-  if (millis() - mqttlastMillis > 1000)
-  {
-    mqttlastMillis = millis();
     mqttClient.publish("nodemcu/photocell", (String)val);
-  }
 }
 #include "blynk_pin.h"

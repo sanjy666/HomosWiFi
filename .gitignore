@@ -3,3 +3,4 @@
 src/settings.h
 src/setting.h
 .ssh/
+node_modules
