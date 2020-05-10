@@ -7,5 +7,24 @@ pio lib install 1 44 54 415 1358
 #comment line 50 in ".pio/libdeps/esp07/PCF8574_ID1358/PCF8574.cpp"
 #PCF8574::write8(val);
 
+#create setting.h in to src/ dir
+#setting.h
+#blynk setting begin
+#const char *auth = "123123123123123123123123";
+#const char *ssid = "123123123";
+#const char *pass = "123123123";
+#IPAddress address = IPAddress(192, 168, 1, 200);
+#mqtt setting begin
+#const char mqserver[] = "192.168.1.210";
+#uint16_t port = 8080;
+#uint otaPort = 8266;
+#char hostname[] = "HomOsWifi";
+#end
+
 pio run -t upload
 see flash.bat or rename to flash.sh and comment win cmd
+
+#node js mqtt server
+cd HomOsMqttSrv/
+npm i
+npm start
