@@ -1,6 +1,5 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
-
 #include <BlynkSimpleEsp8266.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
@@ -10,6 +9,7 @@
 #include <PCF8574.h>
 #include <TimeLib.h>
 #include <WidgetRTC.h>
+#include <WidgetTerminal.h>
 #include <ArduinoOTA.h>
 
 //#include <ArduinoJson.h>
@@ -62,7 +62,7 @@ DeviceAddress tempDeviceAddress;
 BlynkTimer timer;
 PCF8574 gpio(EXPANDER_ADR);
 WidgetRTC rtc;
-//WidgetTerminal terminal(V0);
+WidgetTerminal terminal(V0);
 
 //func proto
 void sensorsInit(void);
@@ -114,7 +114,7 @@ void sensorsRun(void)
       }
     }
   }
-  Serial.println("saved temp value");
+  terminal.println("saved temp value");
   sensors.requestTemperatures();
 }
 
