@@ -18,9 +18,6 @@
 #define BLYNK_DEBUG
 #define BLYNK_PRINT Serial
 //#define BLYNK_PRINT terminal
-//IPAddress mqtt_server(192,168,1,200)
-
-
 
 #define ONEWIRE_BUS 12
 #define TEMPERATURE_PRECISION 12 // 12 9 or other ds18b20 resolution
