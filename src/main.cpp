@@ -96,13 +96,15 @@ void setup()
   digitalWrite(HEATER_FAN_PIN, LOW);
 #include "ota.h"
   ArduinoOTA.begin();
-  mqttClient.begin("192.168.1.210", 8883, WiFiclient);
+  mqttClient.begin(mqserver, mqport, WiFiclient);
+  //mqttClient.connect("nodemcu", "testusername", "testpass");
 }
 void loop()
 {
   ArduinoOTA.handle();
   Blynk.run();
   timer.run();
+  mqttClient.loop();
 }
 
 void sensorsRun(void)
@@ -466,11 +468,10 @@ void mqttConnect(void)
 void mqttSend()
 {
   int val = analogRead(A0);
-  mqttClient.loop();
   if (!mqttClient.connected())
   {
     mqttConnect();
   }
-    mqttClient.publish("nodemcu/photocell", (String)val);
+  mqttClient.publish("nodemcu/photocell", (String)val);
 }
 #include "blynk_pin.h"
